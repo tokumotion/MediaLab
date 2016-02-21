@@ -1,0 +1,7 @@
+reports <- function(network, brand, start_date, stop_date){
+  source("~/Documents/functions_ml.R")
+  switch(network,
+         facebook = facebook(brand, start_date, stop_date),
+         analytics = analytics(brand, start_date, stop_date),
+         adwords = adwords(brand, start_date, stop_date))
+}
