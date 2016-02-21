@@ -59,17 +59,26 @@ facebook <- function(brand, start_date, stop_date) {
   	fblist$start_time >= start_time|
   	fblist$stop_time <= stop_time),]
 
-  variables <- c("impressions", "clicks", "spend", 
-  	"website_clicks","reach", "ctr", "cpc", "cpm")
+  variables <- c("campaign_group_name", "campaign_name", "spend", "frequency",
+                 "impressions","reach", "ctr", "cpm", "cpc", "action_values",
+                 "cost_per_unique_action_type", "unique_actions")
 
-  fbtable <- lapply(fblist$id,
-  	function(id) fb_insights(target = id,
-  							fields = toJSON(variables,
-  							job_type = 'async')))
+  fbtable <- lapply(fblist$id, 
+                    function(id) fb_insights(target = id, 
+                                             level = "adgroup",
+                                             fields = toJSON(variables,
+                                                             job_type = 'async')))
 
   # Convertimos la lista que nos devuelve el API en un dataframe
   fbtable <- do.call('rbind', lapply(fbtable, data.frame))
-  fblist <- cbind(fblist, fbtable)
-  fblist <- test[, -c(1, 4:8)]
+  fb_data <- data.frame()
+  for(i in 1:nrow(test_2)) {
+    w = data.frame(rep(fbtable[i, !sapply(fbtable, is.list)], 
+                       sapply(fbtable$cost_per_unique_action_type[i], nrow),
+                       length.out = length(fbtable[i, !sapply(test_2, is.list)])), 
+                   lapply(fbtable[i, sapply(fbtable, is.list)], data.frame))
+    fb_data = rbind(fb_data, w)
+    rm(w)
+  }
 }
 
