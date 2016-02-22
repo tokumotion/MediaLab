@@ -33,19 +33,24 @@ facebook <- function(brand, start_date, stop_date) {
   	token = fb_token, 
   	period = "day",
   	parms = dates, 
-  	metric = "page_consumptions_by_consumption_type_unique")
-  clicks <- sum(clicks$value[which(clicks$variable == "link clicks")])
+  	metric = c("page_impressions_unique", 
+  	           "page_consumptions_by_consumption_type_unique"))
+  
+  a <- clicks[[1]][,c(4,6:7)]
+  b <- clicks[[2]][,(ncol(clicks[[2]])-2):ncol(clicks[[2]])]
+  
+  b <- lapply(unique(b$end_time), function(x) subset(b, end_time == x))
+  a <- data.frame(a, I(b))
+  
+  fb_clicks <- data.frame()
+  for(i in 1:nrow(a)){
+    w = data.frame(rep(a[1, 1:2], sapply(a$b[1], nrow),
+                       length.out = length(a[1:2])),
+                   lapply(a$b[1], data.frame))
+    fb_clicks = rbind(fb_clicks, w)
+    rm(w)
+  }
 
-  impressions <- getInsights(brand, 
-  	token = fb_token, 
-  	period = "day",
-  	parms = dates, 
-  	metric = "page_impressions_unique")
-  impressions <- sum(impressions$value)
-
-  # Vector con las impresiones del mes, clicks y CTR
-  table <- data.frame(cbind(start_date, stop_date, impressions, 
-                            clicks, CTR = clicks/impressions))
 
   # Activamos la cuenta de Business Manager
   token <- fb_token$credentials$access_token
@@ -84,7 +89,7 @@ facebook <- function(brand, start_date, stop_date) {
     fb_data = rbind(fb_data, w)
     rm(w)
   }
-  return(table ,fb_data)
+  return(fb_clicks ,fb_data)
 }
 
 analytics <- function(brand, start_date, stop_date) {
