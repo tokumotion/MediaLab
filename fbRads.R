@@ -1,7 +1,7 @@
 library(fbRads); library(httr); library(dplyr); library(tidyr)
 library(magrittr); library(lubridate); library(jsonlite)
 
-load("~/Documents/fb_token")
+load("~/GitHub/Prueba/fb_token")
 
 token <- fb_token$credentials$access_token
 acct <- "101146170039639"
@@ -34,8 +34,8 @@ test_2 <- lapply(fblista$id,
                                                   "ctr", "cpm", "cpc",
                                                   "action_values",
                                                   "cost_per_unique_action_type",
-                                                  "unique_actions"),
-                                job_type = "async")))
+                                                  "unique_actions")),
+                                job_type = "async"))
 
 test_2 <- do.call("rbind", lapply(test_2, data.frame))
 
