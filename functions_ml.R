@@ -141,7 +141,43 @@ analytics <- function(brand, start_date, stop_date) {
                     return(ga.data)
                   },
                   caral = {
-                    lapply(tabla$proyectos ,caral_segment)
+                    datos <- lapply(tabla$proyectos ,caral_segment)
+                    return(datos)
                   })
 }
 
+adwords <- function(brand, start_date, stop_date) {
+  require(RAdwords)
+  load("~/GitHub/Prueba/ML_Adwords")
+  metricas <- metrics("CAMPAIGN_PERFORMANCE_REPORT")
+  metricas <- as.character(metricas)
+  cuentas <- c("291-886-0053", "964-275-3771")
+  caral_adwords <- function(x) {
+    report <- statement(metricas[c(36, 96, 11, 86, 66, 43, 33, 27,
+                                   23, 21, 57, 51, 108, 109, 123)], 
+                        report = "CAMPAIGN_PERFORMANCE_REPORT",
+                        start = start_date, end = stop_date)
+    tabla <- getData(clientCustomerId = x, 
+                     google_auth = Adwords, statement = report)
+    Search <- tabla[which(tabla$Network == "Search Network"),]
+    Display <- tabla[which(tabla$Network == "Display Network"),]
+    return(list(Search, Display))
+  }
+  brand <- switch(brand,
+                  nissan = {
+                    report <- statement(metricas[c(36, 96, 11, 86, 66, 43, 33, 27,
+                                                   23, 21, 57, 51, 108, 109, 123)], 
+                                        report = "CAMPAIGN_PERFORMANCE_REPORT",
+                                        start = start_date, end = stop_date)
+                    tabla <- getData(clientCustomerId = "509-793-1822", 
+                                   google_auth = Adwords, statement = report)
+                    Search <- tabla[which(tabla$Network == "Search Network"),]
+                    Display <- tabla[which(tabla$Network == "Display Network"),]
+                    return(list(Search, Display))
+                  },
+                  caral = {
+                    datos <- lapply(cuentas ,caral_adwords)
+                    return(datos)
+                    }
+                  )
+}
