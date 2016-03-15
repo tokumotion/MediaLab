@@ -1,9 +1,9 @@
 reports <- function(network, brand, start_date, stop_date){
-  source("~/Github/Prueba/functions_ml.R")
+  source("~/Github/Prueba/R Files/functions_ml.R")
   switch(network,
          facebook = facebook(brand, start_date, stop_date),
          analytics = analytics(brand, start_date, stop_date),
          adwords = adwords(brand, start_date, stop_date))
 }
 
-reports("adwords", "caral", "2016-01-01", "2016-02-21")
+reports("adwords", "caral", "2016-02-01", "2016-02-29")
