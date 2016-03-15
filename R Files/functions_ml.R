@@ -7,8 +7,9 @@
 # link para poder cruzar la información con la de la bbdd.
 
 facebook <- function(brand, start_date, stop_date) {
-	require(Rfacebook); require(fbRads)
-	load("~/GitHub/Prueba/fb_token")
+	require(Rfacebook); require(fbRads); require(magrittr); require(dplyr); require(tidyr)
+  require(jsonlite)
+	load("~/GitHub/Prueba/Tokens/fb_token")
 
 	# Cuenta de Business Manager de MediaLab
 	acct <- "101146170039639"
@@ -63,39 +64,39 @@ facebook <- function(brand, start_date, stop_date) {
   fblist <- fblist[which(grepl(brand, fblist$name,
   	ignore.case = TRUE)|
   	fblist$start_time >= start_date|
-  	fblist$stop_time <= stop_date),]
+  	fblist$start_time <= stop_date),]
 
   fbtable <- lapply(fblist$id,
                     function(id) fb_insights(target = id, 
-                                             level = "adgroup",
+                                             #level = "adgroup",
                                              fields = toJSON(c("campaign_group_name",
                                                                "campaign_name", "spend",
                                                                "frequency",
                                                                "impressions","reach",
                                                                "ctr", "cpm", "cpc",
-                                                               "action_values",
-                                                               "cost_per_unique_action_type",
                                                                "unique_actions"),
                                              job_type = "async")))
 
   # Convertimos la lista que nos devuelve el API en un dataframe
   fbtable <- do.call('rbind', lapply(fbtable, data.frame))
-  fb_data <- data.frame()
-  for(i in 1:nrow(test_2)) {
-    w = data.frame(rep(fbtable[i, !sapply(fbtable, is.list)],
-                       sapply(fbtable$cost_per_unique_action_type[i], nrow),
-                       length.out = length(fbtable[i, !sapply(test_2, is.list)])),
-                   lapply(fbtable[i, sapply(fbtable, is.list)], data.frame))
-    fb_data = rbind(fb_data, w)
-    rm(w)
-  }
-  return(fb_clicks ,fb_data)
+  # fb_data <- data.frame()
+  # for(i in 1:nrow(test_2)) {
+  #   w = data.frame(rep(fbtable[i, !sapply(fbtable, is.list)],
+  #                      sapply(fbtable$cost_per_unique_action_type[i], nrow),
+  #                      length.out = length(fbtable[i, !sapply(test_2, is.list)])),
+  #                  lapply(fbtable[i, sapply(fbtable, is.list)], data.frame))
+  #   fb_data = rbind(fb_data, w)
+  #   rm(w)
+  fbtable %<>% 
+    tidyr::unnest() %>% 
+    filter(action_type == 'link_click')
+  return(list(insights = fb_clicks ,ads = fb_table))
 }
 
 analytics <- function(brand, start_date, stop_date) {
   require(RGoogleAnalytics)
   
-  load("~/GitHub/Prueba/token_file")
+    load("~/GitHub/Prueba/Tokens/token_file")
   
   ValidateToken(token)
   
@@ -116,8 +117,7 @@ analytics <- function(brand, start_date, stop_date) {
     tabla <- tabla[which(tabla$proyectos == segment),]
     query.list <- Init(start.date = "2016-01-01",
                        end.date = "2016-01-31",
-                       dimensions = "ga:channelGrouping, ga:source,
-                       ga:medium, ga:month",
+                       dimensions = "ga:channelGrouping, ga:month",
                        metrics = c("ga:sessions, ga:percentNewSessions,
                                    ga:newUsers, ga:bounceRate, ga:pageviewsPerSession,
                                    ga:avgSessionDuration", tabla$conversion.rates,
@@ -153,7 +153,7 @@ analytics <- function(brand, start_date, stop_date) {
 
 adwords <- function(brand, start_date, stop_date) {
   require(RAdwords)
-  load("~/GitHub/Prueba/ML_Adwords")
+  load("~/GitHub/Prueba/Tokens/ML_Adwords")
   metricas <- metrics("CAMPAIGN_PERFORMANCE_REPORT")
   metricas <- as.character(metricas)
   cuentas <- c("291-886-0053", "964-275-3771")
@@ -166,9 +166,9 @@ adwords <- function(brand, start_date, stop_date) {
                      google_auth = Adwords, statement = report)
     Search <- tabla[which(tabla$Network == "Search Network"),]
     Display <- tabla[which(tabla$Network == "Display Network"),]
-    return(list(Search, Display))
+    return(list(Search = Search, Display = Display))
   }
-  brand <- switch(brand,
+  branded <- switch(brand,
                   nissan = {
                     report <- statement(metricas[c(36, 96, 11, 86, 66, 43, 33, 27,
                                                    23, 21, 57, 51, 108, 109, 123)], 
@@ -178,11 +178,16 @@ adwords <- function(brand, start_date, stop_date) {
                                    google_auth = Adwords, statement = report)
                     Search <- tabla[which(tabla$Network == "Search Network"),]
                     Display <- tabla[which(tabla$Network == "Display Network"),]
-                    return(list(Search, Display))
+                    results <- list(Search = Search, Display = Display)
                   },
                   caral = {
-                    datos <- lapply(cuentas ,caral_adwords)
-                    return(datos)
+                    datos <- lapply(cuentas, caral_adwords)
+                    Search <- rbind(as.data.frame(datos[[2]][1]), 
+                                    as.data.frame(datos[[1]][1]))
+                    Display <- rbind(as.data.frame(datos[[2]][2]), 
+                                     as.data.frame(datos[[1]][2]))
+                    results <- list(Search = Search, Display = Display)
                     }
                   )
+  return(branded)
 }
