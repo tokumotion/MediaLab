@@ -6,4 +6,6 @@ reports <- function(network, brand, start_date, stop_date){
          facebook = facebook(brand, start_date, stop_date),
          analytics = analytics(brand, start_date, stop_date),
          adwords = adwords(brand, start_date, stop_date))
-}
+  
+reports("adwords", "caral", "2016-02-01", "2016-02-29")
+

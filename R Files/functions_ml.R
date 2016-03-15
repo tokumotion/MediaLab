@@ -9,6 +9,7 @@
 facebook <- function(brand, start_date, stop_date) {
 	require(Rfacebook); require(fbRads); require(magrittr); require(dplyr); require(tidyr)
   require(jsonlite)
+
 	load("~/GitHub/Prueba/Tokens/fb_token")
 
 	# Cuenta de Business Manager de MediaLab
